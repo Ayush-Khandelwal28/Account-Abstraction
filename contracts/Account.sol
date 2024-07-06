@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "@account-abstraction/contracts/core/EntryPoint.sol";
 import "@account-abstraction/contracts/interfaces/IAccount.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract Account is IAccount {
     uint public count = 0;
@@ -21,11 +22,15 @@ contract Account is IAccount {
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external returns (uint256 validationData) {
-        return 0;
+        address recoveredAddress = ECDSA.recover(
+            ECDSA.toEthSignedMessageHash(userOpHash),
+            userOp.signature
+        );
+        return owner == recoveredAddress ? 0 : 1;
     }
 }
 
-contract AccountFactory{
+contract AccountFactory {
     event AccountCreated(address account, address owner);
 
     function createAccount(address owner) external returns (address) {
